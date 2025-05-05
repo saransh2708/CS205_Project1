@@ -3,71 +3,77 @@ using namespace std;
 
 enum class Heurestics
 {
-    UNIFORM_COST_SEARCH, // 0
-    MISPLACED_TILE,      // 1
-    MANHATTAN            // 2
+    UNIFORM_COST_SEARCH, // 1
+    MISPLACED_TILE,      // 2
+    MANHATTAN            // 3
 };
 
 Heurestics get_heurestic(int heurestic)
 {
-    if (heurestic == 1)
-        return Heurestics::MISPLACED_TILE;
     if (heurestic == 2)
+        return Heurestics::MISPLACED_TILE;
+    if (heurestic == 3)
         return Heurestics::MANHATTAN;
     return Heurestics::UNIFORM_COST_SEARCH;
 }
 
-vector<vector<int>> get_goal_state(int dimension)
+vector<vector<int>> get_goal_state()
 {
-    vector<vector<int>> goal_state;
-    int curr = 1;
-    for (int i = 0; i < dimension; i++)
-    {
-        vector<int> row;
-        for (int j = 0; j < dimension; j++)
-        {
-            row.push_back(curr);
-            curr++;
-        }
-        goal_state.push_back(row);
-    }
-    goal_state[dimension - 1][dimension - 1] = 0; // Make last element 0
-    return goal_state;
+    return {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 }
 
-int get_huerestic_cost(vector<vector<int>> board, Heurestics heurestic)
+string convert(vector<vector<int>> &board)
+{
+    int dim = board.size();
+    string res = "";
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < dim; j++)
+        {
+            res += (char)board[i][j];
+        }
+    }
+    return res;
+}
+
+int get_huerestic_cost(vector<vector<int>> &board, Heurestics heurestic)
 {
     int heurestic_cost = 0;
     int dim = board.size();
-    vector<vector<int>> goal_state = get_goal_state(dim);
-    if (heurestic == Heurestics::UNIFORM_COST_SEARCH)
-    {
-        heurestic_cost = 0;
-    }
-    else if (heurestic == Heurestics::MISPLACED_TILE)
+    if (heurestic == Heurestics::MISPLACED_TILE)
     {
         for (int i = 0; i < dim; i++)
         {
             for (int j = 0; j < dim; j++)
             {
-                if (board[i][j] != goal_state[i][j])
+                int goal_value = dim * i + j + 1;
+                if (goal_value == dim * dim)
+                    goal_value = 0;
+                if (board[i][j] != goal_value)
                     heurestic_cost++;
             }
         }
     }
     else if (heurestic == Heurestics::MANHATTAN)
     {
-        // TODO: Manhattan
-        // for(int i=0;i<board->dimension;i++){
-        //     for(int j=0;j<board->dimension;j++){
 
-        //     }
-        // }
+        for (int i = 0; i < dim; i++)
+        {
+            for (int j = 0; j < dim; j++)
+            {
+                if (board[i][j] == 0)
+                    continue;
+                int val = board[i][j] - 1;
+                int gx = val / dim;
+                int gy = val % dim;
+                heurestic_cost += abs(gx - i) + abs(gy - j);
+            }
+        }
     }
     return heurestic_cost;
 }
 
-array<int, 2> get_empty_space_coordinated(vector<vector<int>> puzzle)
+array<int, 2> get_empty_space_coordinated(vector<vector<int>> &puzzle)
 {
     int dim = puzzle.size();
     for (int x = 0; x < dim; x++)
@@ -88,37 +94,24 @@ public:
     int cost;
     Heurestics heurestic;
     vector<vector<int>> current_state;
-    vector<vector<int>> goal_state;
     int empty_x;
     int empty_y;
     int depth;
 
-    // Puzzle(int dimension, int heurestic)
-    // {
-    //     this->dimension = dimension;
-    //     this->heurestic = Heurestics::UNIFORM_COST_SEARCH;
-    //     if (heurestic == 1)
-    //         this->heurestic = Heurestics::MISPLACED_TILE;
-    //     else if (heurestic == 2)
-    //         this->heurestic = Heurestics::MANHATTAN;
-    //     goal_state = get_goal_state(dimension);
-
-    //     this->cost = 0; // TODO: Call get_heurestic
-    // }
-    Puzzle(vector<vector<int>> current_state, int heurestic, int depth)
+    Puzzle(vector<vector<int>> &current_state, int heurestic, int depth)
     {
         this->dimension = current_state.size();
         this->current_state = current_state;
         this->heurestic = get_heurestic(heurestic);
-        auto [x, y] = get_empty_space_coordinated(current_state);
-        this->empty_x = x;
-        this->empty_y = y;
+        array<int, 2> blank_coordinate = get_empty_space_coordinated(current_state);
+        this->empty_x = blank_coordinate[0];
+        this->empty_y = blank_coordinate[1];
         this->depth = depth;
         this->cost = depth + get_huerestic_cost(current_state, this->heurestic);
     }
 };
 
-vector<vector<vector<int>>> expand(Puzzle *node, set<vector<vector<int>>> visited)
+vector<vector<vector<int>>> expand(Puzzle *node, unordered_map<string, int> visited)
 {
     vector<vector<vector<int>>> valid_states;
     int dirx[4] = {1, 0, -1, 0};
@@ -136,7 +129,7 @@ vector<vector<vector<int>>> expand(Puzzle *node, set<vector<vector<int>>> visite
         {
             vector<vector<int>> new_state = node->current_state;
             swap(new_state[new_x][new_y], new_state[old_x][old_y]);
-            if (visited.find(new_state) == visited.end()) // Has not been visited yet.
+            if (!visited[convert(new_state)]) // Has not been visited yet.
             {
                 valid_states.push_back(new_state);
             }
@@ -145,7 +138,7 @@ vector<vector<vector<int>>> expand(Puzzle *node, set<vector<vector<int>>> visite
     return valid_states;
 }
 
-Puzzle *make_node(vector<vector<int>> state, int heurestic, int depth)
+Puzzle *make_node(vector<vector<int>> &state, int heurestic, int depth)
 {
     return new Puzzle(state, heurestic, depth);
 }

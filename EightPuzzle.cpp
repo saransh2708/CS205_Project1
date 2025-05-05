@@ -10,15 +10,15 @@ struct ComparePuzzle
     }
 };
 
-Puzzle *general_search(vector<vector<int>> problem, int heurestic)
+Puzzle *general_search(vector<vector<int>> &problem, int heurestic)
 {
     Puzzle *initial_node = make_node(problem, heurestic, 0);
 
     priority_queue<Puzzle *, vector<Puzzle *>, ComparePuzzle> queue;
     queue.push(initial_node);
 
-    set<vector<vector<int>>> visited;
-    visited.insert(problem);
+    unordered_map<string, int> visited;
+    visited[convert(problem)] = 1;
 
     while (!queue.empty())
     {
@@ -26,8 +26,8 @@ Puzzle *general_search(vector<vector<int>> problem, int heurestic)
         int current_depth = node->depth;
         queue.pop();
 
-        if (node->current_state == get_goal_state(3))
-            return node; // TODO: fix hardcoded 3
+        if (node->current_state == get_goal_state())
+            return node;
 
         vector<vector<vector<int>>> valid_states = expand(node, visited);
 
@@ -35,29 +35,42 @@ Puzzle *general_search(vector<vector<int>> problem, int heurestic)
         {
             Puzzle *valid_node = make_node(valid_state, heurestic, current_depth + 1);
             queue.push(valid_node);
-            visited.insert(valid_state);
+            visited[convert(valid_state)] = 1;
         }
     }
 }
 int main()
 {
     int dimension = 3;
-    cout << "Please Enter number of dimension of the puzzle\n";
-    cin >> dimension;
-    cout << "Please Enter numbers of the puzzle, where 0 means the blank\n";
+    int choice = 1;
+    cout << "Hello World! Type 1 to solve default 8 - Puzzle Solver or 2 to give your own input\n";
+    cin >> choice;
     vector<vector<int>> initial_state;
-    for (int i = 0; i < dimension; i++)
+    int heur = 1;
+    if (choice == 1)
     {
-        vector<int> row;
-        for (int j = 0; j < dimension; j++)
-        {
-            int num;
-            cin >> num;
-            row.push_back(num);
-        }
-        initial_state.push_back(row);
+        initial_state = {{1, 2, 0}, {4, 5, 3}, {7, 8, 6}};
     }
-    Puzzle *result = general_search(initial_state, 0);
+    else
+    {
+        cout << "Please Enter numbers of the puzzle, where 0 means the blank\n";
+
+        for (int i = 0; i < dimension; i++)
+        {
+            vector<int> row;
+            for (int j = 0; j < dimension; j++)
+            {
+                int num;
+                cin >> num;
+                row.push_back(num);
+            }
+            initial_state.push_back(row);
+        }
+    }
+    cout << "Please specify which algorithm to solve it by: \n1. Uniform Cost Search\n2. Misplaced Tile Heuristics\n3. Manhattan Distance Heuristics\n";
+    cin >> heur;
+    Puzzle *result = general_search(initial_state, heur);
+    cout << result->depth << endl;
     for (int i = 0; i < dimension; i++)
     {
 
@@ -67,5 +80,4 @@ int main()
         }
         cout << endl;
     }
-    // board->current_state = {{1, 2, 3}, {4, 5, 6}, {7, 0, 8}};
 }
