@@ -1,22 +1,23 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-enum class Heurestics
+enum class Heuristics
 {
     UNIFORM_COST_SEARCH, // 1
     MISPLACED_TILE,      // 2
     MANHATTAN            // 3
 };
 
-Heurestics get_heurestic(int heurestic)
+Heuristics get_heuristic(int heuristic)
 {
-    if (heurestic == 2)
-        return Heurestics::MISPLACED_TILE;
-    if (heurestic == 3)
-        return Heurestics::MANHATTAN;
-    return Heurestics::UNIFORM_COST_SEARCH;
+    if (heuristic == 2)
+        return Heuristics::MISPLACED_TILE;
+    if (heuristic == 3)
+        return Heuristics::MANHATTAN;
+    return Heuristics::UNIFORM_COST_SEARCH;
 }
 
+// This shoukd be dynamic as per the dimensions. Kept constant to make 8 puzzle faster.
 vector<vector<int>> get_goal_state()
 {
     return {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
@@ -36,11 +37,11 @@ string convert(vector<vector<int>> &board)
     return res;
 }
 
-int get_huerestic_cost(vector<vector<int>> &board, Heurestics heurestic)
+int get_huerestic_cost(vector<vector<int>> &board, Heuristics heuristic)
 {
-    int heurestic_cost = 0;
+    int heuristic_cost = 0;
     int dim = board.size();
-    if (heurestic == Heurestics::MISPLACED_TILE)
+    if (heuristic == Heuristics::MISPLACED_TILE)
     {
         for (int i = 0; i < dim; i++)
         {
@@ -50,11 +51,11 @@ int get_huerestic_cost(vector<vector<int>> &board, Heurestics heurestic)
                 if (goal_value == dim * dim)
                     goal_value = 0;
                 if (board[i][j] != goal_value)
-                    heurestic_cost++;
+                    heuristic_cost++;
             }
         }
     }
-    else if (heurestic == Heurestics::MANHATTAN)
+    else if (heuristic == Heuristics::MANHATTAN)
     {
 
         for (int i = 0; i < dim; i++)
@@ -66,11 +67,11 @@ int get_huerestic_cost(vector<vector<int>> &board, Heurestics heurestic)
                 int val = board[i][j] - 1;
                 int gx = val / dim;
                 int gy = val % dim;
-                heurestic_cost += abs(gx - i) + abs(gy - j);
+                heuristic_cost += abs(gx - i) + abs(gy - j);
             }
         }
     }
-    return heurestic_cost;
+    return heuristic_cost;
 }
 
 array<int, 2> get_empty_space_coordinated(vector<vector<int>> &puzzle)
@@ -92,22 +93,22 @@ class Puzzle
 public:
     int dimension;
     int cost;
-    Heurestics heurestic;
+    Heuristics heuristic;
     vector<vector<int>> current_state;
     int empty_x;
     int empty_y;
     int depth;
 
-    Puzzle(vector<vector<int>> &current_state, int heurestic, int depth)
+    Puzzle(vector<vector<int>> &current_state, int heuristic, int depth)
     {
         this->dimension = current_state.size();
         this->current_state = current_state;
-        this->heurestic = get_heurestic(heurestic);
+        this->heuristic = get_heuristic(heuristic);
         array<int, 2> blank_coordinate = get_empty_space_coordinated(current_state);
         this->empty_x = blank_coordinate[0];
         this->empty_y = blank_coordinate[1];
         this->depth = depth;
-        this->cost = depth + get_huerestic_cost(current_state, this->heurestic);
+        this->cost = depth + get_huerestic_cost(current_state, this->heuristic);
     }
 };
 
@@ -138,7 +139,23 @@ vector<vector<vector<int>>> expand(Puzzle *node, unordered_map<string, int> visi
     return valid_states;
 }
 
-Puzzle *make_node(vector<vector<int>> &state, int heurestic, int depth)
+Puzzle *make_node(vector<vector<int>> &state, int heuristic, int depth)
 {
-    return new Puzzle(state, heurestic, depth);
+    return new Puzzle(state, heuristic, depth);
+}
+
+void print_state(Puzzle *board)
+{
+    int dim = board->current_state.size();
+    cout << "For this state g(n) is " << board->depth << " and h(n) is " << board->cost - board->depth << " and f(n) is " << board->cost << endl;
+    cout << "The current state is: " << endl;
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < dim; j++)
+        {
+            cout << board->current_state[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
 }

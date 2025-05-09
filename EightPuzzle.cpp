@@ -2,6 +2,7 @@
 #include "Puzzle.h"
 using namespace std;
 
+int expanded_nodes;
 struct ComparePuzzle
 {
     bool operator()(Puzzle *p1, Puzzle *p2)
@@ -10,9 +11,10 @@ struct ComparePuzzle
     }
 };
 
-Puzzle *general_search(vector<vector<int>> &problem, int heurestic)
+Puzzle *general_search(vector<vector<int>> &problem, int heuristic)
 {
-    Puzzle *initial_node = make_node(problem, heurestic, 0);
+
+    Puzzle *initial_node = make_node(problem, heuristic, 0);
 
     priority_queue<Puzzle *, vector<Puzzle *>, ComparePuzzle> queue;
     queue.push(initial_node);
@@ -25,6 +27,8 @@ Puzzle *general_search(vector<vector<int>> &problem, int heurestic)
         Puzzle *node = queue.top();
         int current_depth = node->depth;
         queue.pop();
+        print_state(node);
+        expanded_nodes++;
 
         if (node->current_state == get_goal_state())
             return node;
@@ -33,11 +37,12 @@ Puzzle *general_search(vector<vector<int>> &problem, int heurestic)
 
         for (auto valid_state : valid_states)
         {
-            Puzzle *valid_node = make_node(valid_state, heurestic, current_depth + 1);
+            Puzzle *valid_node = make_node(valid_state, heuristic, current_depth + 1);
             queue.push(valid_node);
             visited[convert(valid_state)] = 1;
         }
     }
+    return NULL;
 }
 int main()
 {
@@ -58,6 +63,7 @@ int main()
         for (int i = 0; i < dimension; i++)
         {
             vector<int> row;
+            cout << "Please enter the " << i + 1 << " row of the puzzle\n";
             for (int j = 0; j < dimension; j++)
             {
                 int num;
@@ -69,8 +75,14 @@ int main()
     }
     cout << "Please specify which algorithm to solve it by: \n1. Uniform Cost Search\n2. Misplaced Tile Heuristics\n3. Manhattan Distance Heuristics\n";
     cin >> heur;
+    auto start = chrono::high_resolution_clock::now();
     Puzzle *result = general_search(initial_state, heur);
-    cout << result->depth << endl;
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "Time taken to solve the puzzle is: " << duration.count() << " milliseconds\n";
+    cout << "Depth of the solution: " << result->depth << endl;
+    cout << "Total number of expanded nodes: " << expanded_nodes << endl;
+    cout << "Final state of the puzzle is:\n";
     for (int i = 0; i < dimension; i++)
     {
 
