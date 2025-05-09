@@ -8,6 +8,7 @@ enum class Heuristics
     MANHATTAN            // 3
 };
 
+// This function is used to convert the heuristic number to the enum type.
 Heuristics get_heuristic(int heuristic)
 {
     if (heuristic == 2)
@@ -23,6 +24,7 @@ vector<vector<int>> get_goal_state()
     return {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 }
 
+// This function is used to convert the 2D vector to a string for fast comparison.
 string convert(vector<vector<int>> &board)
 {
     int dim = board.size();
@@ -37,6 +39,7 @@ string convert(vector<vector<int>> &board)
     return res;
 }
 
+// This function is used to calculate the heuristic cost of the current state.
 int get_huerestic_cost(vector<vector<int>> &board, Heuristics heuristic)
 {
     int heuristic_cost = 0;
@@ -74,6 +77,7 @@ int get_huerestic_cost(vector<vector<int>> &board, Heuristics heuristic)
     return heuristic_cost;
 }
 
+// This function is used to get the coordinates of the empty space in the puzzle.
 array<int, 2> get_empty_space_coordinated(vector<vector<int>> &puzzle)
 {
     int dim = puzzle.size();
@@ -112,6 +116,7 @@ public:
     }
 };
 
+// This function is used to expand the current state and get the valid states.
 vector<vector<vector<int>>> expand(Puzzle *node, unordered_map<string, int> visited)
 {
     vector<vector<vector<int>>> valid_states;
@@ -139,11 +144,13 @@ vector<vector<vector<int>>> expand(Puzzle *node, unordered_map<string, int> visi
     return valid_states;
 }
 
+// This is a helper to convert into Puzzle object based on heuristic and depth.
 Puzzle *make_node(vector<vector<int>> &state, int heuristic, int depth)
 {
     return new Puzzle(state, heuristic, depth);
 }
 
+// This function is used to print the current state of the puzzle.
 void print_state(Puzzle *board)
 {
     int dim = board->current_state.size();

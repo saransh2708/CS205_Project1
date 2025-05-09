@@ -3,6 +3,8 @@
 using namespace std;
 
 int expanded_nodes;
+
+// This function sorts state by cost (g(n) + h(n)) in the priority queue.
 struct ComparePuzzle
 {
     bool operator()(Puzzle *p1, Puzzle *p2)
@@ -11,6 +13,7 @@ struct ComparePuzzle
     }
 };
 
+// This is the main search function which can be used for any heuristic.
 Puzzle *general_search(vector<vector<int>> &problem, int heuristic)
 {
 
